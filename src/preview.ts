@@ -10,8 +10,8 @@ import express from 'express';
 const Env = {
   DEFAULT_BRANCH: 'main',
   GITHUB_BRANCH: process.env.GITHUB_BRANCH as string,
+  GITHUB_PROJECT: process.env.GITHUB_PROJECT as string,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN as string,
-  PROJECT: process.env.GITHUB_PROJECT as string,
 };
 
 async function createDirectories(filePath: string) {
@@ -55,7 +55,7 @@ export class PreviewPlugin {
 
   async warmup() {
     await this.keyv.clear();
-    const [owner, repo] = Env.PROJECT.split('/');
+    const [owner, repo] = Env.GITHUB_PROJECT.split('/');
     const directory = 'content/';
     const octokit = new Octokit({
       auth: Env.GITHUB_TOKEN,
