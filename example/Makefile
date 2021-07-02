@@ -1,4 +1,4 @@
-project := 
+project :=
 github_token :=
 github_project :=
 site := auto
@@ -15,5 +15,5 @@ deploy:
 		--allow-unauthenticated \
 		--memory 2Gi \
 		--update-env-vars GITHUB_TOKEN=$(github_token) \
-		--update-env-vars GITHUB_PROJECT=$(github_token) \
+		--update-env-vars GITHUB_PROJECT=$(github_project) \
 		$(site)

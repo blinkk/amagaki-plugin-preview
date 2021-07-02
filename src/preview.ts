@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { Pod, ServerPlugin } from '@amagaki/amagaki';
+import { DocumentRoute, Pod, ServerPlugin } from '@amagaki/amagaki';
 
 import Keyv from 'keyv';
 import { Octokit } from '@octokit/rest';
@@ -52,6 +52,14 @@ export class PreviewPlugin {
           await preview.warmup();
         }
         next();
+      });
+      app.use('/_preview/routes.json', async (req, res, next) => {
+        pod.cache.reset();
+        await preview.warmup();
+        const routes = await getRouteData(pod);
+        return res.json({
+          routes: routes
+        });
       });
     });
   }
@@ -119,6 +127,24 @@ export class PreviewPlugin {
     await this.keyv.set(cacheKey, tree);
     return tree;
   }
+}
+
+export const getRouteData = async (pod: Pod) => {
+  type RouteData = {
+    path?: string;
+  }
+  type LocaleData = Record<string, RouteData>;
+  const routes: Record<string, LocaleData> = {};
+  for (const route of await pod.router.routes()) {
+    if (!routes[route.path]) {
+      routes[route.path] = {};
+    }
+    const locale = route instanceof DocumentRoute ? route.locale.id : 'default';
+    routes[route.path][locale] = {
+      path: route.url.path,
+    };
+  }
+  return routes;
 }
 
 async function createDirectories(filePath: string) {
