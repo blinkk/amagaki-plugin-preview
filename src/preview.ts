@@ -14,14 +14,17 @@ const Env = {
   GITHUB_TOKEN: process.env.GITHUB_TOKEN as string,
 };
 
-async function createDirectories(filePath: string) {
-  const dir = path.dirname(filePath);
-  return fs.mkdirSync(dir, { recursive: true });
+interface GetTreeOptions {
+  owner: string;
+  repo: string;
+  sha: string;
 }
 
-async function output(file: any) {
-  await createDirectories(file.path);
-  await fs.promises.writeFile(file.path, file.contents);
+interface FetchFilesOptions {
+  directory: string;
+  owner: string;
+  repo: string
+  sha: string;
 }
 
 export class PreviewPlugin {
@@ -56,37 +59,37 @@ export class PreviewPlugin {
   async warmup() {
     await this.keyv.clear();
     const [owner, repo] = Env.GITHUB_PROJECT.split('/');
-    const directory = 'content/';
     const octokit = new Octokit({
       auth: Env.GITHUB_TOKEN,
     });
-    const options = { sha: Env.GITHUB_BRANCH };
     const files = await this.fetchFiles(
       octokit,
-      owner,
-      repo,
-      directory,
-      options
+      {
+        owner: owner,
+        repo: repo,
+        directory: Pod.DefaultContentPodPath.replace(/^\//, ''),
+        sha: Env.GITHUB_BRANCH,
+      }
     );
     return Promise.all(files.map(output));
   }
 
   async fetchFiles(
-    octokit: Octokit,
-    owner: string,
-    repo: string,
-    directory: string,
-    options: any
+    octokit: Octokit, options: FetchFilesOptions
   ) {
-    const tree = await this.getTree(octokit, owner, repo, options);
+    const tree = await this.getTree(octokit, {
+      owner: options.owner,
+      repo: options.repo,
+      sha: options.sha
+    });
     const files = tree
       .filter(
-        (node: any) => node.path.startsWith(directory) && node.type === 'blob'
+        (node: any) => node.path.startsWith(options.directory) && node.type === 'blob'
       )
       .map(async (node: any) => {
         const { data } = await octokit.git.getBlob({
-          owner,
-          repo,
+          owner: options.owner,
+          repo: options.repo,
           file_sha: node.sha,
         });
         return {
@@ -98,9 +101,9 @@ export class PreviewPlugin {
     return Promise.all(files);
   }
 
-  async getTree(octokit: Octokit, owner: string, repo: string, options: any) {
+  async getTree(octokit: Octokit, options: GetTreeOptions) {
     const sha = options.sha || Env.DEFAULT_BRANCH;
-    const cacheKey = `${owner}/${repo}#${sha}`;
+    const cacheKey = `${options.owner}/${options.repo}#${sha}`;
     const cachedTree = await this.keyv.get(cacheKey);
     if (cachedTree) {
       return cachedTree;
@@ -108,12 +111,22 @@ export class PreviewPlugin {
     const {
       data: { tree },
     } = await octokit.git.getTree({
-      owner,
-      repo,
+      owner: options.owner,
+      repo: options.repo,
       tree_sha: sha,
       recursive: 'true',
     });
     await this.keyv.set(cacheKey, tree);
     return tree;
   }
+}
+
+async function createDirectories(filePath: string) {
+  const dir = path.dirname(filePath);
+  return fs.mkdirSync(dir, { recursive: true });
+}
+
+async function output(file: any) {
+  await createDirectories(file.path);
+  await fs.promises.writeFile(file.path, file.contents);
 }
