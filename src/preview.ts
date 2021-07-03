@@ -58,6 +58,7 @@ export class PreviewPlugin {
         await preview.warmup();
         const routes = await getRouteData(pod);
         return res.json({
+          defaultLocale: pod.defaultLocale,
           routes: routes
         });
       });
