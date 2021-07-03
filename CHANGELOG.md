@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.1.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.1.0...v1.1.1) (2021-07-03)
+
+
+### Bug Fixes
+
+* fix issue with podPath property on route ([a600e00](https://www.github.com/blinkk/amagaki-plugin-preview/commit/a600e00b1f3d62449058ad61c72b8730ff8f5590))
+
 ## [1.1.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.0.0...v1.1.0) (2021-07-02)
 
 
