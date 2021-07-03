@@ -136,11 +136,14 @@ export const getRouteData = async (pod: Pod) => {
   type LocaleData = Record<string, RouteData>;
   const routes: Record<string, LocaleData> = {};
   for (const route of await pod.router.routes()) {
-    if (!routes[route.path]) {
-      routes[route.path] = {};
+    if (!route.podPath) {
+      continue;
+    }
+    if (!routes[route.podPath]) {
+      routes[route.podPath] = {};
     }
     const locale = route instanceof DocumentRoute ? route.locale.id : 'default';
-    routes[route.path][locale] = {
+    routes[route.podPath][locale] = {
       path: route.url.path,
     };
   }
