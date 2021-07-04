@@ -8,8 +8,7 @@ import { Octokit } from '@octokit/rest';
 import express from 'express';
 
 const Env = {
-  DEFAULT_BRANCH: 'main',
-  GITHUB_BRANCH: process.env.GITHUB_BRANCH as string,
+  GIT_BRANCH: (process.env.GIT_BRANCH as string) || 'main',
   GITHUB_PROJECT: process.env.GITHUB_PROJECT as string,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN as string,
 };
@@ -49,7 +48,12 @@ export class PreviewPlugin {
       app.use(async (req, res, next) => {
         if (req.path.split('?')[0].endsWith('/')) {
           pod.cache.reset();
-          await preview.warmup();
+          try {
+            await preview.warmup();
+          } catch (err) {
+            res.sendStatus(500);
+            res.send(`Error -> ${err.toString()}`);
+          }
         }
         next();
       });
@@ -77,7 +81,7 @@ export class PreviewPlugin {
         owner: owner,
         repo: repo,
         directory: Pod.DefaultContentPodPath.replace(/^\//, ''),
-        sha: Env.GITHUB_BRANCH,
+        sha: Env.GIT_BRANCH,
       }
     );
     return Promise.all(files.map(output));
@@ -111,8 +115,7 @@ export class PreviewPlugin {
   }
 
   async getTree(octokit: Octokit, options: GetTreeOptions) {
-    const sha = options.sha || Env.DEFAULT_BRANCH;
-    const cacheKey = `${options.owner}/${options.repo}#${sha}`;
+    const cacheKey = `${options.owner}/${options.repo}#${options.sha}`;
     const cachedTree = await this.keyv.get(cacheKey);
     if (cachedTree) {
       return cachedTree;
@@ -122,7 +125,7 @@ export class PreviewPlugin {
     } = await octokit.git.getTree({
       owner: options.owner,
       repo: options.repo,
-      tree_sha: sha,
+      tree_sha: options.sha,
       recursive: 'true',
     });
     await this.keyv.set(cacheKey, tree);
