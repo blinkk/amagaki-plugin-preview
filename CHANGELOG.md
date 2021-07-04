@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.1.2](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.1.1...v1.1.2) (2021-07-04)
+
+
+### Bug Fixes
+
+* add defaultLocale to routes output ([bff84b3](https://www.github.com/blinkk/amagaki-plugin-preview/commit/bff84b3e810c5a6a2fe99f2b541bd5c5e989f627))
+
 ### [1.1.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.1.0...v1.1.1) (2021-07-03)
 
 
