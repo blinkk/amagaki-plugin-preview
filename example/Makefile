@@ -17,6 +17,7 @@ deploy-preview-server:
 		--platform managed \
 		--allow-unauthenticated \
 		--memory 2Gi \
+		--labels=preview_server=true,preview_branch=$(branch),preview_github_project=$(github_project),preview_site=$(site) \
 		--update-env-vars GIT_BRANCH=$(branch) \
 		--update-env-vars GITHUB_TOKEN=$(github_token) \
 		--update-env-vars GITHUB_PROJECT=$(github_project) \
