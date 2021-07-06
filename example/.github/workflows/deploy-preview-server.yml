@@ -22,7 +22,8 @@ jobs:
     - name: Deploy using `gcloud` CLI
       run: |-
         make \
-          branch=${GITHUB_REF##*/} \
+          branch=${GITHUB_REF#refs/heads/} \
+          branch_token=${GITHUB_REF##*/} \
           github_project=${{ github.repository }} \
           github_token=${{ secrets.GH_TOKEN }} \
           project=${{ env.GCP_PROJECT_ID }} \

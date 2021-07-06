@@ -26,6 +26,10 @@ interface FetchFilesOptions {
   sha: string;
 }
 
+interface WarmupOptions {
+  branch: string;
+}
+
 export class PreviewPlugin {
   private pod: Pod;
   cache: Record<string, string>;
@@ -46,10 +50,13 @@ export class PreviewPlugin {
     const serverPlugin = pod.plugins.get('ServerPlugin') as ServerPlugin;
     serverPlugin.register(async (app: express.Express) => {
       app.use(async (req, res, next) => {
+        const branch = req.headers['x-preview-branch'] as string || Env.GIT_BRANCH;
         if (req.path.split('?')[0].endsWith('/')) {
           pod.cache.reset();
           try {
-            await preview.warmup();
+            await preview.warmup({
+              branch: branch
+            });
           } catch (err) {
             res.sendStatus(500);
             res.send(`Error -> ${err.toString()}`);
@@ -58,8 +65,11 @@ export class PreviewPlugin {
         next();
       });
       app.use('/_preview/routes.json', async (req, res, next) => {
+        const branch = req.headers['x-preview-branch'] as string || Env.GIT_BRANCH;
         pod.cache.reset();
-        await preview.warmup();
+        await preview.warmup({
+          branch: branch
+        });
         const routes = await getRouteData(pod);
         return res.json({
           defaultLocale: pod.defaultLocale,
@@ -69,7 +79,7 @@ export class PreviewPlugin {
     });
   }
 
-  async warmup() {
+  async warmup(options: WarmupOptions) {
     await this.keyv.clear();
     const [owner, repo] = Env.GITHUB_PROJECT.split('/');
     const octokit = new Octokit({
@@ -81,7 +91,7 @@ export class PreviewPlugin {
         owner: owner,
         repo: repo,
         directory: Pod.DefaultContentPodPath.replace(/^\//, ''),
-        sha: Env.GIT_BRANCH,
+        sha: options.branch,
       }
     );
     return Promise.all(files.map(output));

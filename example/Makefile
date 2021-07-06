@@ -1,4 +1,5 @@
 branch := main
+branch_token :=
 github_project :=
 github_token :=
 project :=
@@ -11,13 +12,13 @@ deploy-preview-server:
 	gcloud run deploy \
 		--project=$(project) \
 		--no-traffic \
-		--tag $(branch) \
+		--tag $(branch_token) \
 		--image gcr.io/$(project)/$(site) \
 		--region us-central1 \
 		--platform managed \
-		--allow-unauthenticated \
 		--memory 2Gi \
-		--update-env-vars GIT_BRANCH=$(branch) \
+		--service-account previewer-identity \
+		--labels=preview-server=true,preview-branch-token=$(branch_token),preview-site=$(site) \
 		--update-env-vars GITHUB_TOKEN=$(github_token) \
 		--update-env-vars GITHUB_PROJECT=$(github_project) \
 		$(site)
