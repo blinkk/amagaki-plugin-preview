@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.1.1...v1.2.0) (2021-07-06)
+
+
+### Features
+
+* implement proxy server ([#5](https://www.github.com/blinkk/amagaki-plugin-preview/issues/5)) ([645bd65](https://www.github.com/blinkk/amagaki-plugin-preview/commit/645bd653cdd106229332aa1601cf223de996cd07))
+
+
+### Bug Fixes
+
+* add defaultLocale to routes output ([bff84b3](https://www.github.com/blinkk/amagaki-plugin-preview/commit/bff84b3e810c5a6a2fe99f2b541bd5c5e989f627))
+
 ### [1.1.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.1.0...v1.1.1) (2021-07-03)
 
 
