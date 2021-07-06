@@ -15,10 +15,9 @@ deploy-preview-server:
 		--image gcr.io/$(project)/$(site) \
 		--region us-central1 \
 		--platform managed \
-		--allow-unauthenticated \
 		--memory 2Gi \
-		--labels=preview_server=true,preview_branch=$(branch),preview_github_project=$(github_project),preview_site=$(site) \
-		--update-env-vars GIT_BRANCH=$(branch) \
+		--service-account previewer-identity \
+		--labels=preview_server=true,preview_branch=$(branch),preview_site=$(site) \
 		--update-env-vars GITHUB_TOKEN=$(github_token) \
 		--update-env-vars GITHUB_PROJECT=$(github_project) \
 		$(site)

@@ -1,10 +1,12 @@
+import { Common } from 'googleapis';
 import { GoogleAuth } from 'google-auth-library';
 import { createProxyServer } from 'http-proxy';
 import express from 'express';
 
-const auth = new GoogleAuth({
-    scopes: 'https://www.googleapis.com/auth/cloud-platform',
+const revisionAuth = new GoogleAuth({
+    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
 });
+const auth = new GoogleAuth();
 
 interface ParseHostnameResult {
     site: string;
@@ -22,12 +24,23 @@ export function parseHostname(
     }
 }
 
+export const getCloudRunClient = async () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const schema = require('./run-googleapis-rest-v1.json');
+    const ep = new Common.Endpoint({
+        auth: revisionAuth
+    });
+    ep.applySchema(ep, schema, schema, ep);
+    return (ep as unknown);
+}
+
+
 export function createApp() {
     const app = express();
     app.disable('x-powered-by');
     app.use(express.json());
     app.all('/*', async (req: express.Request, res: express.Response) => {
-        let [ site, branch ] = [ '', 'main' ];
+        let [site, branch] = ['', 'main'];
         if (req.query.site && req.query.branch) {
             site = req.query.site as string;
             branch = req.query.branch as string;
@@ -43,19 +56,45 @@ export function createApp() {
         }
         try {
             if (true) {
-                const backendHostname = 'https://main---hsw-r5nyjarj7q-uc.a.run.app/';
+                // Get the Google API client for Cloud Run.
+                const cloudRunClient = await getCloudRunClient() as any;
+                cloudRunClient._options.rootUrl = 'https://us-central1-run.googleapis.com';
+                // List all backends for a given site.
+                // If a backend exists for the requested branch, use it, otherwise, fall back to the main/master.
+                const result = await cloudRunClient.namespaces.routes.list({
+                    parent: `namespaces/${process.env.GOOGLE_CLOUD_PROJECT}`,
+                    labelSelector: `preview_server=true,preview_site=${site}`,
+                    includeUninitialized: false,
+                });
+                // Site not deployed.
+                if (!result.data || !result.data.items) {
+                    throw new Error(`No backend found for ${site}`);
+                }
+                const audience = result.data.items[0].status.url;
+                const routes = result.data.items[0].status.traffic;
+                const revisionRoute = routes.find((route: any) => {
+                    return route.url && route.tag === branch;
+                });
+                // No revision matches.
+                if (!revisionRoute) {
+                    throw new Error(`No backend found for ${site}/${branch}`);
+                }
+                const revisionUrl = revisionRoute.url;
+                console.log(`audience: ${audience}`);
+                console.log(`revisionUrl: ${revisionUrl}`);
                 // Add Authorization: Bearer ... header to outgoing backend request.
-                const client = await auth.getClient();
+                // Audience must be the Cloud Run service's primary URL.
+                const client = await auth.getIdTokenClient(audience);
                 const headers = await client.getRequestHeaders();
-                req.headers = headers;
-                // req.url = updatedUrl;
+                req.headers['Authorization'] = headers['Authorization'];
+                // req.headers['x-preview-branch'] = branch;
                 const server = createProxyServer();
                 server.web(req, res, {
-                    target: backendHostname,
+                    target: revisionUrl,
                     changeOrigin: true,
                     preserveHeaderKeyCase: true,
                 });
-                server.on('error', (error: any , req: any , res: any) => {
+                server.on('error', (error: any, req: any, res: any) => {
                     // Reduce logspam.
                     if (`${error}`.includes('socket hang up')) {
                         return;
@@ -76,7 +115,7 @@ export function createApp() {
         } catch (err) {
             res.status(500);
             res.contentType('text/plain');
-            res.send(`Something went wrong. ${err}`);
+            res.send(`Something went wrong. ${err}\n\n${err.stack}`);
             return;
         }
     });
