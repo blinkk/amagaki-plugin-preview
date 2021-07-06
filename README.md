@@ -82,8 +82,9 @@ hostname to labels written when it was deployed. For example, using
 `https://site--main.instance.com`:
 
 ```
-preview_site=site
-preview_branch=main
+preview-server=true
+preview-site=site
+preview-branch-token=main
 ```
 
 If no instance at all is found, show an error message that explains the Cloud
@@ -97,4 +98,5 @@ to a file on the proxy's filesystem. Because the filesystem is ephemeral, the
 lookup result is only cached as long as the file remains. If a backend is not
 found given a hostname, the result is not cached.
 
-The proxy server is deployed once per tenant or orgnaization.
+The proxy server is deployed once per tenant or orgnaization. It is deployed on
+Google App Engine in order to support wildcard subdomains.
