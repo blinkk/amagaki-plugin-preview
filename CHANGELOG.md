@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.2.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.2.0...v1.2.1) (2021-07-06)
+
+
+### Bug Fixes
+
+* remove bin as it is causing problems ([5e46acf](https://www.github.com/blinkk/amagaki-plugin-preview/commit/5e46acf9d1c1a0239322f380d98d197d08f6ac36))
+
 ## [1.2.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.1.1...v1.2.0) (2021-07-06)
 
 
