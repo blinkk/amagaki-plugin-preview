@@ -10,17 +10,17 @@ const auth = new GoogleAuth();
 
 interface ParseHostnameResult {
     site: string;
-    branch: string;
+    branchToken: string;
 }
 
 export function parseHostname(
     hostname: string
 ): ParseHostnameResult {
-    const prefix = hostname.split('.')[0];
-    const [site, branch] = prefix.split('--');
+    const prefix = hostname.split('.')[0].split('-dot-')[0];
+    const [site, branchToken] = prefix.split('--');
     return {
         site,
-        branch,
+        branchToken,
     }
 }
 
@@ -40,18 +40,18 @@ export function createApp() {
     app.disable('x-powered-by');
     app.use(express.json());
     app.all('/*', async (req: express.Request, res: express.Response) => {
-        let [site, branch] = ['', 'main'];
-        if (req.query.site && req.query.branch) {
+        let [site, branchToken] = ['', 'main'];
+        if (req.query.site && req.query.branchToken) {
             site = req.query.site as string;
-            branch = req.query.branch as string;
+            branchToken = req.query.branchToken as string;
         } else {
             const parts = parseHostname(req.hostname);
             site = parts.site;
-            branch = parts.branch;
+            branchToken = parts.branchToken;
         }
         if (req.query.debug) {
             console.log(
-                `Attempting to find manifest matching -> ${site}, ${branch}`
+                `Attempting to find manifest matching -> ${site}, ${branchToken}`
             );
         }
         try {
@@ -63,7 +63,7 @@ export function createApp() {
                 // If a backend exists for the requested branch, use it, otherwise, fall back to the main/master.
                 const result = await cloudRunClient.namespaces.routes.list({
                     parent: `namespaces/${process.env.GOOGLE_CLOUD_PROJECT}`,
-                    labelSelector: `preview_server=true,preview_site=${site}`,
+                    labelSelector: `preview-server=true,preview-site=${site}`,
                     includeUninitialized: false,
                 });
                 // Site not deployed.
@@ -73,11 +73,11 @@ export function createApp() {
                 const audience = result.data.items[0].status.url;
                 const routes = result.data.items[0].status.traffic;
                 const revisionRoute = routes.find((route: any) => {
-                    return route.url && route.tag === branch;
+                    return route.url && route.tag === branchToken;
                 });
                 // No revision matches.
                 if (!revisionRoute) {
-                    throw new Error(`No backend found for ${site}/${branch}`);
+                    throw new Error(`No backend found for ${site}/${branchToken}`);
                 }
                 const revisionUrl = revisionRoute.url;
                 console.log(`audience: ${audience}`);
@@ -87,6 +87,7 @@ export function createApp() {
                 const client = await auth.getIdTokenClient(audience);
                 const headers = await client.getRequestHeaders();
                 req.headers['Authorization'] = headers['Authorization'];
+                req.headers['x-preview-branch-token'] = branchToken;
                 // req.headers['x-preview-branch'] = branch;
                 const server = createProxyServer();
                 server.web(req, res, {
@@ -108,7 +109,7 @@ export function createApp() {
                     }
                     delete proxyRes.headers['x-cloud-trace-context'];
                     proxyRes.headers['x-preview-site'] = site || '';
-                    proxyRes.headers['x-preview-branch'] = branch || '';
+                    proxyRes.headers['x-preview-branch-token'] = branchToken || '';
                     res.writeHead(proxyRes.statusCode, proxyRes.headers);
                 });
             }
