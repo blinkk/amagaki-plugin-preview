@@ -72,7 +72,11 @@ export class PreviewPlugin {
         });
         const routes = await getRouteData(pod);
         return res.json({
-          defaultLocale: pod.defaultLocale,
+          repo: {
+            githubProject: Env.GITHUB_PROJECT,
+            branch: branch,
+          },
+          defaultLocale: pod.defaultLocale.id,
           routes: routes
         });
       });
