@@ -21,19 +21,11 @@ https://github.com/blinkk/amagaki-plugin-staging/workflows/Run%20tests/badge.svg
 [gts-image]: https://img.shields.io/badge/code%20style-google-blueviolet.svg
 [gts-url]: https://github.com/google/gts
 
-## Usage
-
-```
-import { PreviewPlugin } from '@amagaki/amagaki-plugin-preview';
-
-export default function (pod: Pod) {
-    PreviewPlugin.register(pod);
-}
-```
-
 ## Continuous deployment
 
 ### Configuration on GitHub Actions
+
+#### Initial tenant setup
 
 1. Visit the Service Accounts page:
    https://console.cloud.google.com/iam-admin/serviceaccounts
@@ -49,11 +41,29 @@ openssl base64 -in <file>.json  | pbcopy
    Personal Access Token) of an account that has read access to your repo. NOTE:
    This requirement will be abandoned in a future version as we can authenticate
    via GitHub Actions' built-in token instead.
-6. Copy `.github/workflows/deploy-preview-server.yml` into your repository.
-7. Set the following variables within:
 
-- `GCP_PROJECT_ID`
-- `SITE`
+#### Per-project configuration
+
+1. Copy into your repository:
+
+- `.github/workflows/deploy-preview-server.yml`
+  - Set `GCP_PROJECT_ID` and `SITE` variables.
+- `Dockerfile`
+- `Makefile.preview`
+
+2. Install the preview plugin:
+
+```shell
+npm install --save @amagaki/amagaki-plugin-preview
+```
+
+```typescript
+import { PreviewPlugin } from '@amagaki/amagaki-plugin-preview';
+
+export default function (pod: Pod) {
+    PreviewPlugin.register(pod);
+}
+```
 
 ## Proxy server
 
