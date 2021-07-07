@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.2.2](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.2.1...v1.2.2) (2021-07-07)
+
+
+### Bug Fixes
+
+* fix packaging ([14981ed](https://www.github.com/blinkk/amagaki-plugin-preview/commit/14981ed24fcbdb4c04c2faaa1e098eecabab6f49))
+
 ### [1.2.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.2.0...v1.2.1) (2021-07-06)
 
 
