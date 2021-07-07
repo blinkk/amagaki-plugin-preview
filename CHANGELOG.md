@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.2.3](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.2.2...v1.2.3) (2021-07-07)
+
+
+### Bug Fixes
+
+* fix serialization of routes ([ed181ef](https://www.github.com/blinkk/amagaki-plugin-preview/commit/ed181ef55f92d1ef83d56df2d690a9e77b8840db))
+
 ### [1.2.2](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.2.1...v1.2.2) (2021-07-07)
 
 
