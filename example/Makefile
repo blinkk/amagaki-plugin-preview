@@ -11,7 +11,6 @@ deploy-preview-server:
 		--tag gcr.io/$(project)/$(site)
 	gcloud run deploy \
 		--project=$(project) \
-		--no-traffic \
 		--tag $(branch_token) \
 		--image gcr.io/$(project)/$(site) \
 		--region us-central1 \
