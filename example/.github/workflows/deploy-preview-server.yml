@@ -1,5 +1,6 @@
 name: 'Deploy preview server'
 on:
+  create:
   push:
     paths-ignore:
     - 'content/**'
