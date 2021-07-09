@@ -22,6 +22,7 @@
     "dev:start": "npm run compile; cp src/*.json dist",
     "dev": "nodemon --watch src -e ts --exec npm run dev:start",
     "fix": "node ./node_modules/eslint/bin/eslint --fix src/**/*.ts",
+    "prepare": "rm -rf dist/; npm run compile",
     "serve:example": "amagaki serve example",
     "start": "./dist/bin/preview.js serve-proxy",
     "test": "ava"
