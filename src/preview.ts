@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { DocumentRoute, Pod, ServerPlugin } from '@amagaki/amagaki';
+import {DocumentRoute, Pod, ServerPlugin} from '@amagaki/amagaki';
 
 import Keyv from 'keyv';
-import { Octokit } from '@octokit/rest';
+import {Octokit} from '@octokit/rest';
 import express from 'express';
 
 const Env = {
@@ -14,143 +14,140 @@ const Env = {
 };
 
 interface GetTreeOptions {
-  owner: string;
-  repo: string;
   sha: string;
+}
+
+interface Tree {
+  path?: string | undefined;
+  mode?: string | undefined;
+  type?: string | undefined;
+  sha?: string | undefined;
+  size?: number | undefined;
+  url?: string | undefined;
 }
 
 interface FetchFilesOptions {
   directory: string;
-  owner: string;
-  repo: string
   sha: string;
+  tree: Tree[];
 }
 
-interface WarmupOptions {
+interface SyncOptions {
   branch: string;
 }
 
 export class PreviewPlugin {
   private pod: Pod;
-  cache: Record<string, string>;
-  keyv: Keyv;
+  shaCache: Keyv;
+  octokit: Octokit;
+  owner: string;
+  repo: string;
+
+  static CONTENT_TYPES_TO_SYNC = ['html', 'json'];
+  static PATH_TO_SYNC = Pod.DefaultContentPodPath.replace(/^\//, '');
 
   constructor(pod: Pod) {
     this.pod = pod;
-    this.cache = {};
-    this.keyv = new Keyv();
+    this.shaCache = new Keyv();
+    this.octokit = new Octokit({
+      auth: Env.GITHUB_TOKEN,
+    });
+    [this.owner, this.repo] = Env.GITHUB_PROJECT.split('/');
   }
 
   static register(pod: Pod) {
     if (!Env.GITHUB_TOKEN) {
-      console.warn('GITHUB_TOKEN not found, doing nothing.');
+      console.warn('Preview plugin: GITHUB_TOKEN not found, doing nothing.');
+      return;
+    }
+    if (!Env.GITHUB_PROJECT) {
+      console.warn('Preview plugin: GITHUB_PROJECT not found, doing nothing.');
       return;
     }
     const preview = new PreviewPlugin(pod);
     const serverPlugin = pod.plugins.get('ServerPlugin') as ServerPlugin;
     serverPlugin.register(async (app: express.Express) => {
+      app.set('json spaces', 2);
+      app.use('/_preview/routes.json', getRoutesHandler(pod, preview));
       app.use(async (req, res, next) => {
-        const branch = req.headers['x-preview-branch'] as string || Env.GIT_BRANCH;
-        if (req.path.split('?')[0].endsWith('/')) {
-          pod.cache.reset();
-          try {
-            await preview.warmup({
-              branch: branch
-            });
-          } catch (err) {
-            res.sendStatus(500);
-            res.send(`Error -> ${err.toString()}`);
-          }
+        const branch =
+          (req.headers['x-preview-branch'] as string) || Env.GIT_BRANCH;
+        if (req.accepts(PreviewPlugin.CONTENT_TYPES_TO_SYNC)) {
+          await preview.sync({
+            branch: branch,
+          });
         }
         next();
       });
-      app.use('/_preview/routes.json', async (req, res, next) => {
-        const branch = req.headers['x-preview-branch'] as string || Env.GIT_BRANCH;
-        pod.cache.reset();
-        await preview.warmup({
-          branch: branch
-        });
-        const routes = await getRouteData(pod);
-        return res.json({
-          repo: {
-            githubProject: Env.GITHUB_PROJECT,
-            branch: branch,
-          },
-          defaultLocale: pod.defaultLocale.id,
-          routes: routes
-        });
-      });
     });
   }
 
-  async warmup(options: WarmupOptions) {
-    await this.keyv.clear();
-    const [owner, repo] = Env.GITHUB_PROJECT.split('/');
-    const octokit = new Octokit({
-      auth: Env.GITHUB_TOKEN,
+  async sync(options: SyncOptions) {
+    const resp = await this.getTreeResponse({
+      sha: options.branch,
     });
-    const files = await this.fetchFiles(
-      octokit,
-      {
-        owner: owner,
-        repo: repo,
-        directory: Pod.DefaultContentPodPath.replace(/^\//, ''),
+    // Only fetch and write files if the pod is out of sync with GitHub.
+    if (!(await this.shaCache.get(resp.sha))) {
+      console.log(
+        `Syncing ${this.owner}/${this.repo} @ ${options.branch} -> ${resp.sha}`
+      );
+      this.pod.cache.reset();
+      const files = await this.fetchFiles({
+        tree: resp.tree,
+        directory: PreviewPlugin.PATH_TO_SYNC,
         sha: options.branch,
-      }
-    );
-    return Promise.all(files.map(output));
+      });
+      await Promise.all(files.map(writeFile));
+      await this.shaCache.set(resp.sha, true);
+    } else {
+      console.log(
+        `Already up to date ${this.owner}/${this.repo} @ ${options.branch} -> ${resp.sha}`
+      );
+    }
+    return {
+      sha: resp.sha,
+    };
   }
 
-  async fetchFiles(
-    octokit: Octokit, options: FetchFilesOptions
-  ) {
-    const tree = await this.getTree(octokit, {
-      owner: options.owner,
-      repo: options.repo,
-      sha: options.sha
-    });
-    const files = tree
+  async fetchFiles(options: FetchFilesOptions) {
+    const files = options.tree
       .filter(
-        (node: any) => node.path.startsWith(options.directory) && node.type === 'blob'
+        (node: any) =>
+          node.path.startsWith(options.directory) && node.type === 'blob'
       )
       .map(async (node: any) => {
-        const { data } = await octokit.git.getBlob({
-          owner: options.owner,
-          repo: options.repo,
+        const {data} = await this.octokit.git.getBlob({
+          owner: this.owner,
+          repo: this.repo,
           file_sha: node.sha,
         });
         return {
           path: node.path,
           // @ts-ignore
-          contents: Buffer.from(data.content as string, data.encoding as string),
+          contents: Buffer.from(
+            data.content as string,
+            data.encoding as string
+          ),
         };
       });
     return Promise.all(files);
   }
 
-  async getTree(octokit: Octokit, options: GetTreeOptions) {
-    const cacheKey = `${options.owner}/${options.repo}#${options.sha}`;
-    const cachedTree = await this.keyv.get(cacheKey);
-    if (cachedTree) {
-      return cachedTree;
-    }
-    const {
-      data: { tree },
-    } = await octokit.git.getTree({
-      owner: options.owner,
-      repo: options.repo,
+  async getTreeResponse(options: GetTreeOptions) {
+    const {data: resp} = await this.octokit.git.getTree({
+      owner: this.owner,
+      repo: this.repo,
       tree_sha: options.sha,
       recursive: 'true',
     });
-    await this.keyv.set(cacheKey, tree);
-    return tree;
+    return resp;
   }
 }
 
 export const getRouteData = async (pod: Pod) => {
   type RouteData = {
     path?: string;
-  }
+  };
   type LocaleData = Record<string, RouteData>;
   const routes: Record<string, LocaleData> = {};
   for (const route of await pod.router.routes()) {
@@ -166,14 +163,29 @@ export const getRouteData = async (pod: Pod) => {
     };
   }
   return routes;
-}
+};
 
-async function createDirectories(filePath: string) {
-  const dir = path.dirname(filePath);
-  return fs.mkdirSync(dir, { recursive: true });
-}
+const getRoutesHandler = (pod: Pod, preview: PreviewPlugin) => {
+  return async (req: express.Request, res: express.Response) => {
+    const branch =
+      (req.headers['x-preview-branch'] as string) || Env.GIT_BRANCH;
+    const {sha} = await preview.sync({
+      branch: branch,
+    });
+    const routes = await getRouteData(pod);
+    return res.json({
+      repo: {
+        githubProject: Env.GITHUB_PROJECT,
+        branch: branch,
+        sha: sha,
+      },
+      defaultLocale: pod.defaultLocale.id,
+      routes: routes,
+    });
+  };
+};
 
-async function output(file: any) {
-  await createDirectories(file.path);
+const writeFile = async (file: {path: string; contents: Buffer}) => {
+  fs.mkdirSync(path.dirname(file.path), {recursive: true});
   await fs.promises.writeFile(file.path, file.contents);
-}
+};
