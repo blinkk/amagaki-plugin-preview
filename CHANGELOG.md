@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.2.3...v1.3.0) (2021-07-09)
+
+
+### Features
+
+* only sync with github if necessary ([d9e7e2e](https://www.github.com/blinkk/amagaki-plugin-preview/commit/d9e7e2ef8829517ab992eef7bb3b1dc4f45c06c0))
+
+
+### Bug Fixes
+
+* add CORS headers to proxy response so it can be consumed within the editor ([16309ec](https://www.github.com/blinkk/amagaki-plugin-preview/commit/16309ec80c0b7a9f76cd4e8cdb9a26032f7c0db0))
+
 ### [1.2.3](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.2.2...v1.2.3) (2021-07-07)
 
 
