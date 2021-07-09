@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.3.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.3.0...v1.3.1) (2021-07-09)
+
+
+### Bug Fixes
+
+* fix build ([fee6584](https://www.github.com/blinkk/amagaki-plugin-preview/commit/fee6584480daaf93fde33a222392257e0987a2ef))
+
 ## [1.3.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.2.3...v1.3.0) (2021-07-09)
 
 
