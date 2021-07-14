@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.3.2...v1.4.0) (2021-07-14)
+
+
+### Features
+
+* local preview server functionality ([fe0699c](https://www.github.com/blinkk/amagaki-plugin-preview/commit/fe0699c86aba07fc587d1807cb61732596df3cb9))
+
 ### [1.3.2](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.3.1...v1.3.2) (2021-07-14)
 
 
