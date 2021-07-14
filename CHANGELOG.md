@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.3.2](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.3.1...v1.3.2) (2021-07-14)
+
+
+### Bug Fixes
+
+* change the route for the preview config ([#13](https://www.github.com/blinkk/amagaki-plugin-preview/issues/13)) ([2f3009e](https://www.github.com/blinkk/amagaki-plugin-preview/commit/2f3009e32f89262a2712828f576a2d0cb040098a))
+
 ### [1.3.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.3.0...v1.3.1) (2021-07-09)
 
 
