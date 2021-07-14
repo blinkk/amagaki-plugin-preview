@@ -5,6 +5,7 @@ import {DocumentRoute, Pod, ServerPlugin} from '@amagaki/amagaki';
 
 import Keyv from 'keyv';
 import {Octokit} from '@octokit/rest';
+import cors from 'cors';
 import express from 'express';
 
 const Env = {
@@ -12,6 +13,13 @@ const Env = {
   GITHUB_PROJECT: process.env.GITHUB_PROJECT as string,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN as string,
 };
+
+const ORIGIN_HOSTS = [
+  'https://editor.dev',
+  'https://beta.editor.dev',
+  'http://localhost:3000',
+  'http://localhost:8080',
+];
 
 interface GetTreeOptions {
   sha: string;
@@ -36,8 +44,19 @@ interface SyncOptions {
   branch: string;
 }
 
+interface SyncResults {
+  sha: string;
+}
+
+type RouteData = {
+  path?: string;
+};
+
+type LocaleData = Record<string, RouteData>;
+
 export class PreviewPlugin {
   private pod: Pod;
+  isDev: boolean;
   shaCache: Keyv;
   octokit: Octokit;
   owner: string;
@@ -48,41 +67,71 @@ export class PreviewPlugin {
 
   constructor(pod: Pod) {
     this.pod = pod;
+    this.isDev = pod.env.dev;
     this.shaCache = new Keyv();
     this.octokit = new Octokit({
       auth: Env.GITHUB_TOKEN,
     });
-    [this.owner, this.repo] = Env.GITHUB_PROJECT.split('/');
+    // Local server does not define the github project.
+    if (Env.GITHUB_PROJECT) {
+      [this.owner, this.repo] = Env.GITHUB_PROJECT.split('/');
+    } else {
+      this.owner = 'unknown';
+      this.repo = 'unknown';
+    }
   }
 
   static register(pod: Pod) {
-    if (!Env.GITHUB_TOKEN) {
-      console.warn('Preview plugin: GITHUB_TOKEN not found, doing nothing.');
-      return;
-    }
-    if (!Env.GITHUB_PROJECT) {
-      console.warn('Preview plugin: GITHUB_PROJECT not found, doing nothing.');
-      return;
+    const isDev = pod.env.dev;
+
+    if (isDev) {
+      console.log('Preview plugin: Dev mode for local editor previews.');
+    } else {
+      // Hosted previews need the github information.
+      if (!Env.GITHUB_TOKEN) {
+        console.warn('Preview plugin: GITHUB_TOKEN not found, doing nothing.');
+        return;
+      }
+      if (!Env.GITHUB_PROJECT) {
+        console.warn(
+          'Preview plugin: GITHUB_PROJECT not found, doing nothing.'
+        );
+        return;
+      }
     }
     const preview = new PreviewPlugin(pod);
     const serverPlugin = pod.plugins.get('ServerPlugin') as ServerPlugin;
     serverPlugin.register(async (app: express.Express) => {
       app.set('json spaces', 2);
-      app.use('/preview.json', getRoutesHandler(pod, preview));
-      app.use(async (req, res, next) => {
-        const branch =
-          (req.headers['x-preview-branch'] as string) || Env.GIT_BRANCH;
-        if (req.accepts(PreviewPlugin.CONTENT_TYPES_TO_SYNC)) {
-          await preview.sync({
-            branch: branch,
-          });
-        }
-        next();
+      const router = express.Router({
+        mergeParams: true,
       });
+      router.use(
+        cors({
+          credentials: true,
+          origin: ORIGIN_HOSTS,
+        })
+      );
+      router.use('/preview.json', getRoutesHandler(pod, preview));
+      app.use(router);
+
+      // If hosted, sync the github files.
+      if (!isDev) {
+        app.use(async (req, res, next) => {
+          const branch =
+            (req.headers['x-preview-branch'] as string) || Env.GIT_BRANCH;
+          if (req.accepts(PreviewPlugin.CONTENT_TYPES_TO_SYNC)) {
+            await preview.sync({
+              branch: branch,
+            });
+          }
+          next();
+        });
+      }
     });
   }
 
-  async sync(options: SyncOptions) {
+  async sync(options: SyncOptions): Promise<SyncResults> {
     const resp = await this.getTreeResponse({
       sha: options.branch,
     });
@@ -106,7 +155,7 @@ export class PreviewPlugin {
     }
     return {
       sha: resp.sha,
-    };
+    } as SyncResults;
   }
 
   async fetchFiles(options: FetchFilesOptions) {
@@ -145,33 +194,47 @@ export class PreviewPlugin {
 }
 
 export const getRouteData = async (pod: Pod) => {
-  type RouteData = {
-    path?: string;
-  };
-  type LocaleData = Record<string, RouteData>;
-  const routes: Record<string, LocaleData> = {};
+  const routes: Record<string, LocaleData | RouteData> = {};
   for (const route of await pod.router.routes()) {
     if (!route.podPath) {
       continue;
     }
-    if (!routes[route.podPath]) {
-      routes[route.podPath] = {};
+
+    if (
+      route instanceof DocumentRoute ||
+      // instanceof does not work for the type checking
+      // when using npm link or ???
+      route.constructor.name === 'DocumentRoute'
+    ) {
+      if (!routes[route.podPath]) {
+        routes[route.podPath] = {};
+      }
+      (routes[route.podPath] as LocaleData)[
+        (route as DocumentRoute).locale.id
+      ] = {
+        path: route.url.path,
+      };
+    } else {
+      routes[route.podPath] = {
+        path: route.url.path,
+      };
     }
-    const locale = route instanceof DocumentRoute ? route.locale.id : 'default';
-    routes[route.podPath][locale] = {
-      path: route.url.path,
-    };
   }
   return routes;
 };
 
 const getRoutesHandler = (pod: Pod, preview: PreviewPlugin) => {
   return async (req: express.Request, res: express.Response) => {
-    const branch =
-      (req.headers['x-preview-branch'] as string) || Env.GIT_BRANCH;
-    const {sha} = await preview.sync({
-      branch: branch,
-    });
+    let branch: string | undefined = undefined;
+    let sha: string | undefined = undefined;
+    if (!preview.isDev) {
+      branch = (req.headers['x-preview-branch'] as string) || Env.GIT_BRANCH;
+      sha = (
+        await preview.sync({
+          branch: branch,
+        })
+      ).sha;
+    }
     const routes = await getRouteData(pod);
     return res.json({
       repo: {
