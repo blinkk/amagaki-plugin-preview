@@ -54,9 +54,16 @@ type RouteData = {
 
 type LocaleData = Record<string, RouteData>;
 
+interface PreviewPluginOptions {
+  /**
+   * Is the plugin running in a dev (local server) mode?
+   */
+  isDev?: boolean;
+}
+
 export class PreviewPlugin {
   private pod: Pod;
-  isDev: boolean;
+  options?: PreviewPluginOptions;
   shaCache: Keyv;
   octokit: Octokit;
   owner: string;
@@ -65,9 +72,9 @@ export class PreviewPlugin {
   static CONTENT_TYPES_TO_SYNC = ['html', 'json'];
   static PATH_TO_SYNC = Pod.DefaultContentPodPath.replace(/^\//, '');
 
-  constructor(pod: Pod) {
+  constructor(pod: Pod, options?: PreviewPluginOptions) {
     this.pod = pod;
-    this.isDev = pod.env.dev;
+    this.options = options;
     this.shaCache = new Keyv();
     this.octokit = new Octokit({
       auth: Env.GITHUB_TOKEN,
@@ -82,7 +89,8 @@ export class PreviewPlugin {
   }
 
   static register(pod: Pod) {
-    const isDev = pod.env.dev;
+    const hasTokens = Env.GITHUB_TOKEN && Env.GITHUB_PROJECT;
+    const isDev = !hasTokens && pod.env.dev;
 
     if (isDev) {
       console.log('Preview plugin: Dev mode for local editor previews.');
@@ -99,7 +107,9 @@ export class PreviewPlugin {
         return;
       }
     }
-    const preview = new PreviewPlugin(pod);
+    const preview = new PreviewPlugin(pod, {
+      isDev,
+    });
     const serverPlugin = pod.plugins.get('ServerPlugin') as ServerPlugin;
     serverPlugin.register(async (app: express.Express) => {
       app.set('json spaces', 2);
@@ -227,7 +237,7 @@ const getRoutesHandler = (pod: Pod, preview: PreviewPlugin) => {
   return async (req: express.Request, res: express.Response) => {
     let branch: string | undefined = undefined;
     let sha: string | undefined = undefined;
-    if (!preview.isDev) {
+    if (!preview.options?.isDev) {
       branch = (req.headers['x-preview-branch'] as string) || Env.GIT_BRANCH;
       sha = (
         await preview.sync({
