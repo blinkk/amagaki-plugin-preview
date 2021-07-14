@@ -68,7 +68,7 @@ export class PreviewPlugin {
     const serverPlugin = pod.plugins.get('ServerPlugin') as ServerPlugin;
     serverPlugin.register(async (app: express.Express) => {
       app.set('json spaces', 2);
-      app.use('/_preview/routes.json', getRoutesHandler(pod, preview));
+      app.use('/preview.json', getRoutesHandler(pod, preview));
       app.use(async (req, res, next) => {
         const branch =
           (req.headers['x-preview-branch'] as string) || Env.GIT_BRANCH;
