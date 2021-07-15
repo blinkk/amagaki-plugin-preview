@@ -106,12 +106,6 @@ export function createApp() {
             return;
           }
           delete proxyRes.headers['x-cloud-trace-context'];
-          const origin = req.header('Origin') ? req.header('Origin') : '*';
-          proxyRes.headers['Access-Control-Allow-Origin'] = origin;
-          proxyRes.headers['Access-Control-Allow-Methods'] = origin;
-          proxyRes.headers['Access-Control-Allow-Headers'] =
-            'origin, content-type, accept';
-          proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
           proxyRes.headers['x-preview-site'] = site || '';
           proxyRes.headers['x-preview-branch-token'] = branchToken || '';
           res.writeHead(proxyRes.statusCode, proxyRes.headers);
