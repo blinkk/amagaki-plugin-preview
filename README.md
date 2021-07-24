@@ -30,14 +30,15 @@ https://github.com/blinkk/amagaki-plugin-staging/workflows/Run%20tests/badge.svg
 1. Visit the Service Accounts page:
    https://console.cloud.google.com/iam-admin/serviceaccounts
 2. Download a JSON key for the `Compute Engine default service account`.
-3. Encode the service account key:
+3. Ensure the service account has the `iam.serviceaccounts.actAs` role. (This is needed in order to deploy Cloud Run instances with a different identity.)
+4. Encode the service account key:
 
 ```shell
 openssl base64 -in <file>.json  | pbcopy
 ```
 
-4. Paste the result into a GitHub Secret named `GCP_SA_KEY`.
-5. Create a GitHub Secret called `GH_TOKEN` that has a GitHub token (i.e. a
+5. Paste the result into a GitHub Secret named `GCP_SA_KEY`.
+6. Create a GitHub Secret called `GH_TOKEN` that has a GitHub token (i.e. a
    Personal Access Token) of an account that has read access to your repo. NOTE:
    This requirement will be abandoned in a future version as we can authenticate
    via GitHub Actions' built-in token instead.
