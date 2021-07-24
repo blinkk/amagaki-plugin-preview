@@ -30,7 +30,7 @@ https://github.com/blinkk/amagaki-plugin-staging/workflows/Run%20tests/badge.svg
 1. Visit the Service Accounts page:
    https://console.cloud.google.com/iam-admin/serviceaccounts
 2. Download a JSON key for the `Compute Engine default service account`.
-3. Ensure the service account has the `iam.serviceaccounts.actAs` role. (This is needed in order to deploy Cloud Run instances with a different identity.)
+3. Ensure the service account has the `iam.serviceaccounts.actAs` role. (This is needed in order to deploy Cloud Run instances with a different identity.) The service account will also need deploy access to Cloud Run.
 4. Encode the service account key:
 
 ```shell
