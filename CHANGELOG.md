@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.4.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.4.0...v1.4.1) (2021-07-24)
+
+
+### Bug Fixes
+
+* remove CORS headers ([#17](https://www.github.com/blinkk/amagaki-plugin-preview/issues/17)) ([1f8a079](https://www.github.com/blinkk/amagaki-plugin-preview/commit/1f8a079bb19dae876a224098074cbd3039fbf381))
+
 ## [1.4.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.3.2...v1.4.0) (2021-07-14)
 
 
