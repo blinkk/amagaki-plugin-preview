@@ -46,6 +46,7 @@ interface SyncOptions {
 
 interface SyncResults {
   sha: string;
+  paths: string[];
 }
 
 type RouteData = {
@@ -139,6 +140,8 @@ export class PreviewPlugin {
         });
       }
     });
+
+    return preview;
   }
 
   async sync(options: SyncOptions): Promise<SyncResults> {
@@ -146,6 +149,7 @@ export class PreviewPlugin {
       sha: options.branch,
     });
     // Only fetch and write files if the pod is out of sync with GitHub.
+    let paths = [];
     if (!(await this.shaCache.get(resp.sha))) {
       console.log(
         `Syncing ${this.owner}/${this.repo} @ ${options.branch} -> ${resp.sha}`
@@ -156,6 +160,7 @@ export class PreviewPlugin {
         directory: PreviewPlugin.PATH_TO_SYNC,
         sha: options.branch,
       });
+      paths = files.map(file => file.path);
       await Promise.all(files.map(writeFile));
       await this.shaCache.set(resp.sha, true);
     } else {
@@ -165,6 +170,7 @@ export class PreviewPlugin {
     }
     return {
       sha: resp.sha,
+      paths: paths,
     } as SyncResults;
   }
 
@@ -193,13 +199,20 @@ export class PreviewPlugin {
   }
 
   async getTreeResponse(options: GetTreeOptions) {
-    const {data: resp} = await this.octokit.git.getTree({
-      owner: this.owner,
-      repo: this.repo,
-      tree_sha: options.sha,
-      recursive: 'true',
-    });
-    return resp;
+    try {
+      const {data: resp} = await this.octokit.git.getTree({
+        owner: this.owner,
+        repo: this.repo,
+        tree_sha: options.sha,
+        recursive: 'true',
+      });
+      return resp;
+    } catch (err) {
+      console.error(err);
+      throw new Error(
+        `Could not fetch tree for ${this.owner}/${this.repo} @ ${options.sha}`
+      );
+    }
   }
 }
 
