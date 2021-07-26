@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.4.0...v1.5.0) (2021-07-26)
+
+
+### Features
+
+* add sync command to cli ([7c68802](https://www.github.com/blinkk/amagaki-plugin-preview/commit/7c6880296683abc66d48c0937b885b35be8b4123))
+
+
+### Bug Fixes
+
+* remove CORS headers ([#17](https://www.github.com/blinkk/amagaki-plugin-preview/issues/17)) ([1f8a079](https://www.github.com/blinkk/amagaki-plugin-preview/commit/1f8a079bb19dae876a224098074cbd3039fbf381))
+
 ## [1.4.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.3.2...v1.4.0) (2021-07-14)
 
 
