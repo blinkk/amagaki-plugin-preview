@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.5.0...v1.6.0) (2021-07-28)
+
+
+### Features
+
+* cache responses in keyv if sha hasn't changed ([3a7f6a4](https://www.github.com/blinkk/amagaki-plugin-preview/commit/3a7f6a440730da26a38e45832da323d31a7f9e4d))
+
 ## [1.5.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.4.0...v1.5.0) (2021-07-26)
 
 
