@@ -13,7 +13,7 @@ def sync_git(branch):
 def patched_wsgi_app(self, environ, start_response):
     for item in CONTENT_TYPES_TO_SYNC:
         if item in environ['HTTP_ACCEPT']:
-            sync_git('workspace/editor-dev')
+            sync_git(environ['BRANCH'])
             break
     return main.PodServer.original_wsgi_app(self, environ, start_response)
 

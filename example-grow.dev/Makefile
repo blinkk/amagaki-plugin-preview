@@ -1,4 +1,5 @@
 branch_token :=
+branch :=
 github_project :=
 github_token :=
 project :=
@@ -20,4 +21,5 @@ deploy-preview-server:
 		--labels=preview-server=true,preview-branch-token=$(branch_token),preview-site=$(site) \
 		--update-env-vars GITHUB_TOKEN=$(github_token) \
 		--update-env-vars GITHUB_PROJECT=$(github_project) \
+		--update-env-vars BRANCH=$(branch) \
 		$(site)
