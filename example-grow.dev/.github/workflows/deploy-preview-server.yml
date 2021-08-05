@@ -1,0 +1,32 @@
+name: 'Deploy preview server'
+on:
+  create:
+  push:
+    paths-ignore:
+    - 'content/**'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      GCP_PROJECT_ID: example
+      SITE: example
+    steps:
+    - name: Set up `gcloud` SDK
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ env.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: Deploy using `gcloud` CLI
+      run: |-
+        make \
+          branch=${GITHUB_REF#refs/heads/} \
+          branch_token=${GITHUB_REF##*/} \
+          github_project=${{ github.repository }} \
+          github_token=${{ secrets.GH_TOKEN }} \
+          project=${{ env.GCP_PROJECT_ID }} \
+          site=${{ env.SITE }} \
+          deploy-preview-server
