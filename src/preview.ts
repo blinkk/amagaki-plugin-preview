@@ -92,11 +92,11 @@ export class PreviewPlugin {
     }
   }
 
-  static register(pod: Pod, options: PreviewPluginOptions) {
+  static register(pod: Pod, options?: PreviewPluginOptions) {
     const hasTokens = Env.GITHUB_TOKEN && Env.GITHUB_PROJECT;
     const isDev =
-      options.isDev === undefined ? !hasTokens && pod.env.dev : options.isDev;
-    const sync = options.sync;
+      options?.isDev === undefined ? !hasTokens && pod.env.dev : options?.isDev;
+    const sync = options?.sync;
 
     if (!isDev) {
       if (!Env.GITHUB_TOKEN) {
