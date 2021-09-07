@@ -56,10 +56,10 @@ type RouteData = {
 type LocaleData = Record<string, RouteData>;
 
 interface PreviewPluginOptions {
-  /**
-   * Is the plugin running in a dev (local server) mode?
-   */
+  // Is the plugin running in a dev (local server) mode?
   isDev?: boolean;
+  // Should the plugin sync with Git?
+  sync?: boolean;
 }
 
 export class PreviewPlugin {
@@ -92,14 +92,13 @@ export class PreviewPlugin {
     }
   }
 
-  static register(pod: Pod) {
+  static register(pod: Pod, options: PreviewPluginOptions) {
     const hasTokens = Env.GITHUB_TOKEN && Env.GITHUB_PROJECT;
-    const isDev = !hasTokens && pod.env.dev;
+    const isDev =
+      options.isDev === undefined ? !hasTokens && pod.env.dev : options.isDev;
+    const sync = options.sync;
 
-    if (isDev) {
-      console.log('Preview plugin: Dev mode for local editor previews.');
-    } else {
-      // Hosted previews need the github information.
+    if (!isDev) {
       if (!Env.GITHUB_TOKEN) {
         console.warn('Preview plugin: GITHUB_TOKEN not found, doing nothing.');
         return;
@@ -113,6 +112,7 @@ export class PreviewPlugin {
     }
     const preview = new PreviewPlugin(pod, {
       isDev,
+      sync,
     });
     const serverPlugin = pod.plugins.get('ServerPlugin') as ServerPlugin;
     serverPlugin.register(async (app: express.Express) => {
@@ -129,8 +129,8 @@ export class PreviewPlugin {
       router.use('/preview.json', getRoutesHandler(pod, preview));
       app.use(router);
 
-      // If hosted, sync the github files.
-      if (!isDev) {
+      // If hosted, sync Git files.
+      if (!isDev && sync !== false) {
         app.use(async (req, res, next) => {
           const branch =
             (req.headers['x-preview-branch'] as string) || Env.GIT_BRANCH;
