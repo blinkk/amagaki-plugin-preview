@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.7.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.7.0...v1.7.1) (2021-09-07)
+
+
+### Bug Fixes
+
+* optional options ([d6ce60e](https://www.github.com/blinkk/amagaki-plugin-preview/commit/d6ce60eb9762ca3c0197a0f66b9766240167b682))
+
 ## [1.7.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.6.0...v1.7.0) (2021-09-07)
 
 
