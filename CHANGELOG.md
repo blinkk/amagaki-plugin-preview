@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.6.0...v1.7.0) (2021-09-07)
+
+
+### Features
+
+* add ability to disable git sync ([bb3bd66](https://www.github.com/blinkk/amagaki-plugin-preview/commit/bb3bd661bd8233735c36e081a20c5a2f46f007d1))
+
 ## [1.6.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.5.0...v1.6.0) (2021-07-28)
 
 
