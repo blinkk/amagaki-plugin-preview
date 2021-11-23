@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.7.1...v2.0.0) (2021-11-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* use updated pod property to determine path to sync
+
+### Bug Fixes
+
+* use updated pod property to determine path to sync ([a44aeeb](https://www.github.com/blinkk/amagaki-plugin-preview/commit/a44aeeb12e7355f18116564a54e6a2f692eeb3eb))
+
 ### [1.7.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.7.0...v1.7.1) (2021-09-07)
 
 
