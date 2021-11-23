@@ -70,13 +70,14 @@ export class PreviewPlugin {
   octokit: Octokit;
   owner: string;
   repo: string;
+  pathToSync: string;
 
   static CONTENT_TYPES_TO_SYNC = ['html', 'json'];
   static EXTENSIONS_TO_NOT_SYNC_REGEX = /\.css$|\.js$|\.svg|\.jpg|\.png$/;
-  static PATH_TO_SYNC = Pod.DefaultContentPodPath.replace(/^\//, '');
 
   constructor(pod: Pod, options?: PreviewPluginOptions) {
     this.pod = pod;
+    this.pathToSync = pod.defaultContentPodPath.replace(/^\//, '');
     this.options = options;
     this.shaCache = new Keyv();
     this.responseCache = new Keyv();
@@ -179,7 +180,7 @@ export class PreviewPlugin {
       this.pod.cache.reset();
       const files = await this.fetchFiles({
         tree: resp.tree,
-        directory: PreviewPlugin.PATH_TO_SYNC,
+        directory: this.pathToSync,
         sha: options.branch,
       });
       paths = files.map(file => file.path);
