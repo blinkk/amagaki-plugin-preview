@@ -1,7 +1,7 @@
 project :=
 
 deploy:
-	npm run compile
+	npm run dev:start
 	gcloud app deploy \
 	  --project=$(project) \
 	  --version=auto \
