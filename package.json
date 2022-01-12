@@ -18,7 +18,7 @@
     "build:example": "amagaki build example",
     "check": "gts check",
     "clean": "gts clean",
-    "compile": "tsc",
+    "compile": "npx tsc",
     "dev:start": "npm run compile; cp src/*.json dist",
     "dev": "nodemon --watch src -e ts --exec npm run dev:start",
     "fix": "node ./node_modules/eslint/bin/eslint --fix src/**/*.ts",
