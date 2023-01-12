@@ -1,5 +1,12 @@
 # Changelog
 
+### [2.0.1](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v2.0.0...v2.0.1) (2023-01-12)
+
+
+### Bug Fixes
+
+* packaging for app engine deployment ([426adba](https://www.github.com/blinkk/amagaki-plugin-preview/commit/426adbaf9f194d655b514634fb902fa094391ac8))
+
 ## [2.0.0](https://www.github.com/blinkk/amagaki-plugin-preview/compare/v1.7.1...v2.0.0) (2021-11-23)
 
 
