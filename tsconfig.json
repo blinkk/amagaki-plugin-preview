@@ -1,15 +1,12 @@
 {
-    "extends": "./node_modules/gts/tsconfig-google.json",
-    "compilerOptions": {
-      "esModuleInterop": true,
-      "outDir": "dist",
-      "skipLibCheck": true,
-      "types": [],
-    },
-    "exclude": [
-      "node_modules",
-    ],
-    "include": [
-      "./src/**/*.ts",
-    ]
-  }
+  "extends": "./node_modules/gts/tsconfig-google.json",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "lib": ["es2020"],
+    "types": ["node"]
+  },
+  "exclude": ["node_modules"],
+  "include": ["./src/**/*.ts", "./src/*.json"]
+}

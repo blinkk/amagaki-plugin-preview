@@ -84,6 +84,8 @@ export function createApp() {
         const client = await auth.getIdTokenClient(audience);
         const headers = await client.getRequestHeaders();
         req.headers['Authorization'] = headers['Authorization'];
+        // Avoid sending this header to the Cloud Run backend.
+        delete req.headers['x-goog-iap-jwt-assertion'];
         // TODO: See if we can use a different preview server as the base, if a
         // revision isn't found.
         // req.headers['x-preview-branch'] = `workspace/${branchToken}`;

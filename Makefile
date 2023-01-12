@@ -4,9 +4,9 @@ deploy:
 	npm run dev:start
 	gcloud app deploy \
 	  --project=$(project) \
-	  --version=auto \
 	  --verbosity=error \
 	  -q \
+	  --no-promote \
 	  app.yaml
 
 deploy-run:
